@@ -1,28 +1,18 @@
 import { NextResponse } from "next/server";
-import http from "http";
+import fetch from "node-fetch"; // Assuming you're using Node.js and have node-fetch installed
 
 // Function to get location information from IP2Location API
-function getLocationInfo(clientIP) {
+async function getLocationInfo(clientIP) {
   const apiKey = "679B651088DB029D1D59E06765F691FF";
   const apiUrl = `https://api.ip2location.io/?key=${apiKey}&ip=${clientIP}`;
 
-  return new Promise((resolve, reject) => {
-    http
-      .get(apiUrl, (response) => {
-        let data = "";
-
-        response.on("data", (chunk) => {
-          data += chunk;
-        });
-
-        response.on("end", () => {
-          resolve(JSON.parse(data));
-        });
-      })
-      .on("error", (error) => {
-        reject(error);
-      });
-  });
+  try {
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    throw new Error("Error fetching location information:", error);
+  }
 }
 
 // To handle a GET request to /api
@@ -41,7 +31,7 @@ export async function GET(request) {
       request.headers.get("x-real-ip") ||
       request.headers.get("X-Appengine-User-Ip") ||
       request.headers.get("x-appengine-user-ip") ||
-      request.connection.remoteAddress;
+      request.headers.get("req.connection.remoteAddress");
 
     if (!clientIP) {
       throw new Error("Client IP address not found in headers.");
