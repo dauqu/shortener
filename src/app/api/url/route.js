@@ -1,41 +1,29 @@
 import { NextResponse } from "next/server";
 import http from "http";
 
-// Function to get public IP address
-function getPublicIPAddress() {
+// Function to get location information from IP2Location API
+function getLocationInfo(clientIP) {
+  const apiKey = "679B651088DB029D1D59E06765F691FF";
+  const apiUrl = `https://api.ip2location.io/?key=${apiKey}&ip=${clientIP}`;
+
   return new Promise((resolve, reject) => {
     http
-      .get({ host: "api.ipify.org", port: 80, path: "/" }, function (resp) {
-        let ip = "";
-        resp.on("data", function (chunk) {
-          ip += chunk;
+      .get(apiUrl, (response) => {
+        let data = "";
+
+        response.on("data", (chunk) => {
+          data += chunk;
         });
-        resp.on("end", function () {
-          resolve(ip);
+
+        response.on("end", () => {
+          resolve(JSON.parse(data));
         });
       })
-      .on("error", function (err) {
-        reject(err);
+      .on("error", (error) => {
+        reject(error);
       });
   });
 }
-
-// To handle a GET request to /api
-// export async function GET(request) {
-//   try {
-//     const ip = await getPublicIPAddress();
-//     return new Response(JSON.stringify({ ip }), {
-//       status: 200,
-//       headers: { "Content-Type": "application/json" },
-//     });
-//   } catch (error) {
-//     console.error("Error fetching IP address:", error);
-//     return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-//       status: 500,
-//       headers: { "Content-Type": "application/json" },
-//     });
-//   }
-// }
 
 // To handle a GET request to /api
 export async function GET(request) {
@@ -53,13 +41,19 @@ export async function GET(request) {
       request.headers.get("x-real-ip") ||
       request.headers.get("X-Appengine-User-Ip") ||
       request.headers.get("x-appengine-user-ip") ||
-      request.headers.get("req.connection.remoteAddress");
-    return new Response(JSON.stringify({ clientIP }), {
+      request.connection.remoteAddress;
+
+    if (!clientIP) {
+      throw new Error("Client IP address not found in headers.");
+    }
+
+    const locationInfo = await getLocationInfo(clientIP);
+    return new Response(JSON.stringify(locationInfo), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
   } catch (error) {
-    console.error("Error fetching client IP address:", error);
+    console.error("Error:", error);
     return new Response(JSON.stringify({ error: "Internal Server Error" }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
