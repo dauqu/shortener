@@ -1,7 +1,4 @@
 "use client";
-// import { accounts, mails } from "@/app/console/data";
-// import { Drawer } from "./components/drawer";
-
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,26 +11,21 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { Overview } from "@/app/components/overview";
 import { RecentSales } from "@/app/components/recent-sales";
-import { MainNav } from "@/app/components/main-nav";
-import { Search } from "@/app/components/search";
-import { UserNav } from "@/app/components/user-nav";
-import Links from "../components/links";
+import Visitors from "@/app/dashboard/view/visitors";
 
 export default function MailPage() {
+
   return (
     <>
       <div className="flex items-center justify-between space-y-2">
         <h2 className="text-3xl font-bold tracking-tight underline decoration-double">
-          Dashboard
+          daucu.io/ehuii
         </h2>
-        <div className="flex items-center space-x-2">
-          <Button>Create Link</Button>
-        </div>
       </div>
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="links">Links</TabsTrigger>
+          <TabsTrigger value="visitors">Visitors</TabsTrigger>
         </TabsList>
         <TabsContent value="overview" className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -155,8 +147,8 @@ export default function MailPage() {
             </Card>
           </div>
         </TabsContent>
-        <TabsContent value="links" className="">
-          <Links />
+        <TabsContent value="visitors" className="space-y-4">
+          <Visitors />
         </TabsContent>
       </Tabs>
     </>

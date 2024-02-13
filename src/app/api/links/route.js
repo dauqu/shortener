@@ -41,14 +41,20 @@ export async function POST(req, res) {
   try {
     const data = await req.json(); // Parse JSON data from request body
 
-    //Generate 5 digit rendome string
-    const randomString = generateRandomString(5);
+    // Generate unique link
+    let randomString;
+    let isUnique = false;
+    while (!isUnique) {
+      randomString = generateRandomString(5);
+      isUnique = await isLinkUnique(randomString);
+    }
+    console.log(randomString);
 
     //Date
     const date = new Date().toISOString(); // Example date value
 
     // Save Data
-    saveData(randomString, data.link, data.title, date);
+    saveData(data.title, randomString, data.destination, "active", 0, date);
 
     //Make link
     const generatedLink = "https://localhost:3000/api/visite/" + randomString;
@@ -57,6 +63,22 @@ export async function POST(req, res) {
   } catch (error) {
     return NextResponse.json({ error: error }, { status: 400 });
   }
+}
+
+// Function to check if link is unique
+async function isLinkUnique(link) {
+  return new Promise((resolve, reject) => {
+    const db = new sqlite3.Database("data.db");
+    db.get("SELECT link FROM links WHERE link = ?", [link], (err, row) => {
+      if (err) {
+        console.error("Error checking link uniqueness:", err.message);
+        reject(err);
+      } else {
+        resolve(!row); // Resolve true if link is unique, false if it already exists
+      }
+    });
+    db.close();
+  });
 }
 
 //Generate rendome string function
@@ -72,26 +94,27 @@ function generateRandomString(length) {
   return randomString;
 }
 
-// Save data
 // Function to save data into SQLite database
-function saveData(back_half, link, title, date) {
+function saveData(title, link, destination, status, views, date) {
   // Open or create a SQLite database
   const db = new sqlite3.Database("data.db");
 
   // Create a table if it doesn't exist
   db.serialize(() => {
     db.run(`CREATE TABLE IF NOT EXISTS links (
-            id INTEGER PRIMARY KEY,
-            title TEXT,
-            back_half TEXT,
-            link TEXT,
-            date TEXT
-        )`);
+      id INTEGER PRIMARY KEY,
+      title TEXT,
+      link TEXT UNIQUE,
+      destination TEXT,
+      status TEXT,
+      views INTEGER,
+      date TEXT
+  );`);
 
     // Insert data into the table
     db.run(
-      `INSERT INTO links (title, back_half, link, date) VALUES (?, ?, ?, ?)`,
-      [title, back_half, link, date],
+      `INSERT INTO links (title, link, destination, status, views, date) VALUES (?, ?, ?, ?, ?, ?)`,
+      [title, link, destination, status, views, date],
       function (err) {
         if (err) {
           console.error("Error inserting data:", err.message);
@@ -112,33 +135,46 @@ function saveData(back_half, link, title, date) {
   });
 }
 
-// To handle a DELETE request to /api/visit/:id
+// Delete data
 export async function DELETE(req, res) {
   try {
-    const { id } = req.params; // Extract the ID from request parameters
-    console.log(id);
+    const data = await req.json(); // Parse JSON data from request body
+    const id = data.id;
+
     // Open the database connection
     const db = new sqlite3.Database("data.db");
 
     // Delete data from the table where the id matches
-    db.run(`DELETE FROM links WHERE id = ?`, [id], function (err) {
-      if (err) {
-        console.error("Error deleting data:", err.message);
-        db.close();
-        return NextResponse.json(
-          { error: "Error deleting data" },
-          { status: 500 }
-        );
-      } else {
-        console.log(`Data deleted successfully for ID: ${id}`);
-        db.close();
-        return NextResponse.json(
-          { message: "Data deleted successfully" },
-          { status: 200 }
-        );
-      }
-    });
+    // Wrap the database operation in a promise
+    const deleteData = () => {
+      return new Promise((resolve, reject) => {
+        db.run(`DELETE FROM links WHERE id = ?`, [id], function (err) {
+          if (err) {
+            console.error("Error deleting data:", err.message);
+            db.close();
+            reject({ status: 500, message: "Error deleting data" }); // Reject with status 500 on error
+          } else if (this.changes === 0) {
+            // Check if no rows were affected
+            console.log(`No data found for ID: ${id}`);
+            db.close();
+            reject({ status: 404, message: "Data not found" }); // Reject with status 404 if no data found
+          } else {
+            console.log(`Data deleted successfully for ID: ${id}`);
+            db.close();
+            resolve({ status: 200, message: "Data deleted successfully" }); // Resolve with status 200 on success
+          }
+        });
+      });
+    };
+
+    // Await the promise
+    const result = await deleteData();
+
+    return NextResponse.json(
+      { message: result.message },
+      { status: result.status }
+    );
   } catch (error) {
-    return NextResponse.json({ error: error }, { status: 400 });
+    return NextResponse.json({ message: error }, { status: 400 });
   }
 }
