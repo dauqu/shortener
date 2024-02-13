@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 export function MainNav({ className, ...props }) {
   return (
     <nav
-      className={cn("flex items-center space-x-4 lg:space-x-6", className)}
+      className={cn("flex items-center space-x-4 lg:space-x-6 text-white", className)}
       {...props}
     >
       <Link
@@ -16,19 +16,19 @@ export function MainNav({ className, ...props }) {
       </Link>
       <Link
         href="/examples/dashboard"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        className="text-sm font-medium transition-colors hover:text-primary"
       >
         Customers
       </Link>
       <Link
         href="/examples/dashboard"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        className="text-sm font-medium transition-colors hover:text-primary"
       >
         Products
       </Link>
       <Link
         href="/examples/dashboard"
-        className="text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        className="text-sm font-medium transition-colors hover:text-primary"
       >
         Settings
       </Link>
