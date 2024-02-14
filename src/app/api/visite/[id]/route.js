@@ -40,7 +40,7 @@ export async function GET(request, { params }) {
 
     const userAgent = request.headers.get("User-Agent");
 
-    const locationInfo = await getLocationInfo("51.15.212.225");
+    const locationInfo = await getLocationInfo(clientIP);
 
     //Date
     const date = new Date().toISOString(); // Example date value
