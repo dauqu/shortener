@@ -12,15 +12,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Overview } from "@/app/components/overview";
 import { RecentSales } from "@/app/components/recent-sales";
 import Visitors from "@/app/dashboard/view/visitors";
+import { useRouter } from "next/navigation";
 
 export default function MailPage() {
-
+  const router = useRouter();
   return (
     <>
       <div className="flex items-center justify-between space-y-2">
-        <h2 className="text-3xl font-bold tracking-tight underline decoration-double">
-          daucu.io/ehuii
-        </h2>
+        <div className="flex space-x-2 items-center">
+          <Button
+            onClick={() => {
+              router.push("/dashboard");
+            }}
+          >
+            - Back
+          </Button>
+          <h2 className="text-3xl font-bold tracking-tight">daucu.io/ehuii</h2>
+        </div>
       </div>
       <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
